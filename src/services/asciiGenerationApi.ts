@@ -13,12 +13,14 @@ export class GenerationError extends Error {
   }
 }
 
-/** API 接続先（Cloudflare Worker）の URL。ビルド時の環境変数から取得する。 */
-const API_BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
+/** API 接続先（Cloudflare Worker）の URL を環境変数から取得する（末尾スラッシュ除去）。 */
+function getApiBaseUrl(): string {
+  return (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+}
 
 /** AI 生成機能が利用可能（接続先が設定済み）かどうか。 */
 export function isGenerationConfigured(): boolean {
-  return API_BASE_URL.length > 0;
+  return getApiBaseUrl().length > 0;
 }
 
 /**
@@ -46,7 +48,8 @@ export async function generateAscii(
   request: AsciiGenerationRequest,
   signal?: AbortSignal,
 ): Promise<string> {
-  if (!isGenerationConfigured()) {
+  const baseUrl = getApiBaseUrl();
+  if (!baseUrl) {
     throw new GenerationError(
       "NOT_CONFIGURED",
       "AI生成の接続先が未設定です（VITE_API_URL）。",
@@ -55,7 +58,7 @@ export async function generateAscii(
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/api/generate-ascii`, {
+    response = await fetch(`${baseUrl}/api/generate-ascii`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
@@ -86,7 +89,15 @@ export async function generateAscii(
     throw new GenerationError(code, message);
   }
 
-  const data = (await response.json()) as AsciiGenerationResponse;
+  let data: AsciiGenerationResponse;
+  try {
+    data = (await response.json()) as AsciiGenerationResponse;
+  } catch {
+    throw new GenerationError(
+      "INVALID_RESPONSE",
+      "サーバーの応答を解釈できませんでした。",
+    );
+  }
   const ascii = stripCodeFences(data.ascii ?? "");
   if (!ascii.trim()) {
     throw new GenerationError(

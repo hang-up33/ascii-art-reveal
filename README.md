@@ -112,8 +112,9 @@ npx wrangler secret put GEMINI_API_KEY
 npx wrangler deploy
 ```
 
-- `GEMINI_MODEL`（既定 `gemini-1.5-flash`）は `wrangler.toml` の `[vars]` で変更できます。
-- Worker は入力長・生成サイズの検証、コードフェンス除去、簡易レート制限、CORS 制限を行います。
+- `GEMINI_MODEL`（既定 `gemini-2.5-flash`）は `wrangler.toml` の `[vars]` で変更できます。利用可能なモデルは変わるため、必要に応じて[サポート対象モデル](https://ai.google.dev/gemini-api/docs/models)の最新値に更新してください（`gemini-1.5` 系は廃止済み）。
+- `ALLOWED_ORIGIN` の既定はローカル開発用（`http://localhost:5173`）です。デプロイ前に自分の GitHub Pages のオリジンへ変更してください（`*` はクォータ悪用を招くため非推奨）。
+- Worker は入力長・生成サイズの検証、コードフェンス除去、簡易レート制限、CORS 制限、許可オリジン以外のサーバー側拒否を行います。
 
 ### 2. フロントエンドに接続先を設定する
 

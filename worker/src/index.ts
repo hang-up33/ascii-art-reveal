@@ -26,7 +26,8 @@ interface GenerateRequestBody {
   maxHeight?: unknown;
 }
 
-const DEFAULT_MODEL = "gemini-1.5-flash";
+const DEFAULT_MODEL = "gemini-2.5-flash";
+const UPSTREAM_TIMEOUT_MS = 20_000;
 const MAX_PROMPT_LENGTH = 500;
 const DEFAULT_MAX_WIDTH = 60;
 const DEFAULT_MAX_HEIGHT = 30;
@@ -38,17 +39,35 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 20;
 const rateLimitStore = new Map<string, number[]>();
 
+/** 数値らしき値を指定範囲の整数へ丸める。不正値は fallback。 */
 function clampInt(value: unknown, fallback: number, min: number, max: number) {
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, Math.floor(n)));
 }
 
-function corsHeaders(env: Env, origin: string | null): Record<string, string> {
-  const allowed = (env.ALLOWED_ORIGIN ?? "*")
+/** ALLOWED_ORIGIN をパースして許可オリジンの配列にする。 */
+function parseAllowedOrigins(env: Env): string[] {
+  return (env.ALLOWED_ORIGIN ?? "*")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+/**
+ * リクエストのオリジンが許可されているか判定する。
+ * `*` を含む場合は常に許可。それ以外は Origin ヘッダが許可リストに
+ * 含まれる場合のみ許可（Origin 無しは不許可）。
+ */
+function isOriginAllowed(env: Env, origin: string | null): boolean {
+  const allowed = parseAllowedOrigins(env);
+  if (allowed.includes("*")) return true;
+  return origin !== null && allowed.includes(origin);
+}
+
+/** リクエストのオリジンに応じた CORS レスポンスヘッダを組み立てる。 */
+function corsHeaders(env: Env, origin: string | null): Record<string, string> {
+  const allowed = parseAllowedOrigins(env);
   const allowAll = allowed.includes("*");
   const allowOrigin =
     allowAll || (origin && allowed.includes(origin)) ? (origin ?? "*") : "";
@@ -67,6 +86,7 @@ function corsHeaders(env: Env, origin: string | null): Record<string, string> {
   return headers;
 }
 
+/** JSON レスポンスを生成する。 */
 function json(
   body: unknown,
   status: number,
@@ -78,6 +98,7 @@ function json(
   });
 }
 
+/** エラーコードとメッセージを持つ JSON エラーレスポンスを生成する。 */
 function errorResponse(
   code: string,
   message: string,
@@ -87,6 +108,10 @@ function errorResponse(
   return json({ error: { code, message } }, status, headers);
 }
 
+/**
+ * 簡易レート制限の判定。ウィンドウ内のリクエスト数が上限に達していれば true。
+ * 期限切れのキーは削除し、Map が無制限に増えてメモリリークするのを防ぐ。
+ */
 function isRateLimited(key: string): boolean {
   const now = Date.now();
   const history = (rateLimitStore.get(key) ?? []).filter(
@@ -98,6 +123,16 @@ function isRateLimited(key: string): boolean {
   }
   history.push(now);
   rateLimitStore.set(key, history);
+
+  // 期限切れになったキーを掃除する。
+  for (const [k, times] of rateLimitStore) {
+    if (
+      times.length === 0 ||
+      now - times[times.length - 1] >= RATE_LIMIT_WINDOW_MS
+    ) {
+      rateLimitStore.delete(k);
+    }
+  }
   return false;
 }
 
@@ -124,6 +159,7 @@ export function extractAscii(
     .join("\n");
 }
 
+/** Gemini へ渡すシステム指示（ASCIIアートのみ出力・サイズ制限）を組み立てる。 */
 function buildSystemInstruction(maxWidth: number, maxHeight: number): string {
   return [
     "あなたはASCIIアート生成器です。",
@@ -135,6 +171,7 @@ function buildSystemInstruction(maxWidth: number, maxHeight: number): string {
   ].join("\n");
 }
 
+/** Gemini API を呼び出し、生成された生テキストを返す。 */
 async function callGemini(
   env: Env,
   prompt: string,
@@ -142,13 +179,19 @@ async function callGemini(
   maxHeight: number,
 ): Promise<string> {
   const model = env.GEMINI_MODEL || DEFAULT_MODEL;
+  // API キーは URL クエリではなくヘッダで渡し、ログ・トレースへの露出を避ける。
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     model,
-  )}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+  )}:generateContent`;
 
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": env.GEMINI_API_KEY,
+    },
+    // 上流が遅い場合に Worker リクエストを掴み続けないようタイムアウトする。
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     body: JSON.stringify({
       systemInstruction: {
         parts: [{ text: buildSystemInstruction(maxWidth, maxHeight) }],
@@ -174,12 +217,24 @@ async function callGemini(
 }
 
 export default {
+  /** Worker のエントリポイント。POST /api/generate-ascii を処理する。 */
   async fetch(request: Request, env: Env): Promise<Response> {
     const origin = request.headers.get("Origin");
     const cors = corsHeaders(env, origin);
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors });
+    }
+
+    // 許可オリジン以外は Gemini を呼ぶ前に拒否し、API クォータの不正消費を防ぐ。
+    // （CORS ヘッダはブラウザ側の制御にすぎず、サーバー側での拒否が必要。）
+    if (!isOriginAllowed(env, origin)) {
+      return errorResponse(
+        "FORBIDDEN_ORIGIN",
+        "このオリジンからのリクエストは許可されていません。",
+        403,
+        cors,
+      );
     }
 
     const url = new URL(request.url);

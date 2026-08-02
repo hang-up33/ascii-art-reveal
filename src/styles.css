@@ -6,6 +6,9 @@
   --muted: #8a8a92;
   --accent: #4ade80;
   --accent-dim: #1f6f3f;
+  --accent-fg: #eafff1;
+  --input-bg: #050506;
+  --error: #f87171;
 
   color-scheme: dark;
 }
@@ -109,7 +112,7 @@ body {
 .gen__input {
   flex: 1;
   min-width: 0;
-  background: #050506;
+  background: var(--input-bg);
   color: var(--fg);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
@@ -129,7 +132,7 @@ body {
 .gen__button {
   white-space: nowrap;
   background: var(--accent-dim);
-  color: #eafff1;
+  color: var(--accent-fg);
   border: 1px solid var(--accent-dim);
   border-radius: 8px;
   padding: 0.5rem 0.9rem;
@@ -155,7 +158,7 @@ body {
 .gen__error {
   margin: 0;
   font-size: 0.8rem;
-  color: #f87171;
+  color: var(--error);
 }
 
 /* ------- 入力エリア ------- */
@@ -213,7 +216,7 @@ body {
   flex: 1;
   min-height: 220px;
   resize: vertical;
-  background: #050506;
+  background: var(--input-bg);
   color: var(--fg);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
@@ -290,7 +293,7 @@ body {
 .controls__button--primary {
   background: var(--accent-dim);
   border-color: var(--accent-dim);
-  color: #eafff1;
+  color: var(--accent-fg);
 }
 
 .controls__button:disabled {

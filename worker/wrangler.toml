@@ -2,14 +2,18 @@ name = "ascii-art-reveal-api"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 
-# 公開元オリジンを制限する。GitHub Pages のURLに合わせて設定する。
-# 例: "https://<ユーザー名>.github.io"
-# 開発時にローカルのフロントから叩く場合はカンマ区切りで追加する。
-# 例: "https://<ユーザー名>.github.io,http://localhost:5173"
-# すべて許可する場合は "*"（本番では非推奨）。
+# 公開元オリジンを制限する。既定はローカル開発用。
+# デプロイ前に必ず自分の GitHub Pages のオリジンへ変更すること。
+#   例: "https://<ユーザー名>.github.io"
+# ローカルのフロントからも叩く場合はカンマ区切りで追加する。
+#   例: "https://<ユーザー名>.github.io,http://localhost:5173"
+# "*"（全許可）はクォータ悪用を招くため本番では使用しないこと。
+#
+# GEMINI_MODEL は現行のサポート対象モデルを指定する（1.5系は廃止済み）。
+# 利用可能なモデルは変わるため、必要に応じて最新のものへ更新する。
 [vars]
-ALLOWED_ORIGIN = "*"
-GEMINI_MODEL = "gemini-1.5-flash"
+ALLOWED_ORIGIN = "http://localhost:5173"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 # GEMINI_API_KEY は [vars] へは書かない。必ず Secret として登録する:
 #   wrangler secret put GEMINI_API_KEY

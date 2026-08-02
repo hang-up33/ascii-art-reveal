@@ -45,10 +45,27 @@ export default function App() {
     }
   }, [ascii, play]);
 
-  const handleGenerated = useCallback((generated: string) => {
-    pendingPlayRef.current = true;
-    setAscii(generated);
-  }, []);
+  // 現在の ascii をミラーする ref（handleGenerated を安定参照に保ちつつ、
+  // state 更新関数を純粋なまま「値が同じか」を判定するために使う）。
+  const asciiRef = useRef(ascii);
+  useEffect(() => {
+    asciiRef.current = ascii;
+  }, [ascii]);
+
+  const handleGenerated = useCallback(
+    (generated: string) => {
+      if (generated === asciiRef.current) {
+        // 値が変わらず ascii 変更 effect が走らない（エンジン再構築されない）ため、
+        // ここで直接リビールを再生する。pendingPlayRef は立てない
+        // （立てたままだと次の無関係な編集で誤って自動再生されてしまう）。
+        play();
+        return;
+      }
+      pendingPlayRef.current = true;
+      setAscii(generated);
+    },
+    [play],
+  );
 
   return (
     <div className="app">

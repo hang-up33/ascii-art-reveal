@@ -27,7 +27,13 @@ export function GeminiPrompt({ onGenerated }: GeminiPromptProps) {
   };
 
   return (
-    <div className="gen">
+    <form
+      className="gen"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void handleSubmit();
+      }}
+    >
       <label className="gen__label" htmlFor="gen-prompt">
         つくりたいものを言葉で入力
       </label>
@@ -37,23 +43,26 @@ export function GeminiPrompt({ onGenerated }: GeminiPromptProps) {
           className="gen__input"
           type="text"
           value={prompt}
-          disabled={!configured || isLoading}
+          // 生成中は disabled ではなく readOnly + aria-busy にして、
+          // フォーカスを失わせず状態を支援技術へ伝える。
+          disabled={!configured}
+          readOnly={isLoading}
+          aria-busy={isLoading}
           placeholder="例: 月を見上げる猫"
           onChange={(event) => {
             setPrompt(event.target.value);
             if (error) clearError();
           }}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+            // IME 変換確定の Enter でフォーム送信されないようにする。
+            if (event.key === "Enter" && event.nativeEvent.isComposing) {
               event.preventDefault();
-              void handleSubmit();
             }
           }}
         />
         <button
-          type="button"
+          type="submit"
           className="gen__button"
-          onClick={() => void handleSubmit()}
           disabled={!configured || isLoading || prompt.trim().length === 0}
         >
           {isLoading ? "生成中…" : "AIで生成"}
@@ -70,6 +79,6 @@ export function GeminiPrompt({ onGenerated }: GeminiPromptProps) {
           {error}
         </p>
       )}
-    </div>
+    </form>
   );
 }
