@@ -89,16 +89,28 @@ export async function generateAscii(
     throw new GenerationError(code, message);
   }
 
-  let data: AsciiGenerationResponse;
+  let data: unknown;
   try {
-    data = (await response.json()) as AsciiGenerationResponse;
+    data = await response.json();
   } catch {
     throw new GenerationError(
       "INVALID_RESPONSE",
       "サーバーの応答を解釈できませんでした。",
     );
   }
-  const ascii = stripCodeFences(data.ascii ?? "");
+  // null・配列・プリミティブや ascii が文字列でない応答でも安全に扱う。
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    Array.isArray(data) ||
+    typeof (data as { ascii?: unknown }).ascii !== "string"
+  ) {
+    throw new GenerationError(
+      "INVALID_RESPONSE",
+      "サーバーの応答を解釈できませんでした。",
+    );
+  }
+  const ascii = stripCodeFences((data as AsciiGenerationResponse).ascii);
   if (!ascii.trim()) {
     throw new GenerationError(
       "EMPTY_RESULT",

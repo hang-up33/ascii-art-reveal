@@ -150,4 +150,25 @@ describe("generateAscii", () => {
     const error = await catchError(generateAscii(REQUEST));
     expect((error as GenerationError).code).toBe("INVALID_RESPONSE");
   });
+
+  it("成功応答が JSON null なら INVALID_RESPONSE（TypeError にしない）", async () => {
+    vi.stubEnv("VITE_API_URL", API);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse(200, null)),
+    );
+    const error = await catchError(generateAscii(REQUEST));
+    expect(error).toBeInstanceOf(GenerationError);
+    expect((error as GenerationError).code).toBe("INVALID_RESPONSE");
+  });
+
+  it("ascii が文字列でない応答は INVALID_RESPONSE", async () => {
+    vi.stubEnv("VITE_API_URL", API);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse(200, { ascii: 123 })),
+    );
+    const error = await catchError(generateAscii(REQUEST));
+    expect((error as GenerationError).code).toBe("INVALID_RESPONSE");
+  });
 });
