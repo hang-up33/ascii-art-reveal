@@ -267,9 +267,9 @@ export default {
       );
     }
 
-    let body: GenerateRequestBody;
+    let parsed: unknown;
     try {
-      body = (await request.json()) as GenerateRequestBody;
+      parsed = await request.json();
     } catch {
       return errorResponse(
         "INVALID_JSON",
@@ -278,6 +278,16 @@ export default {
         cors,
       );
     }
+    // JSON の null や配列・プリミティブでもプロパティ参照で例外にならないよう検証する。
+    if (typeof parsed !== "object" || parsed === null) {
+      return errorResponse(
+        "INVALID_JSON",
+        "リクエストの形式が不正です。",
+        400,
+        cors,
+      );
+    }
+    const body = parsed as GenerateRequestBody;
 
     const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
     if (!prompt) {
