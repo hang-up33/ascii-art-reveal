@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { asciiSamples } from "../samples/sampleAscii";
 
 interface AsciiInputProps {
@@ -9,8 +10,14 @@ interface AsciiInputProps {
  * ASCIIアートの入力エリア。
  * サンプル読込・クリアを備える。入力値の変更はアニメーションの
  * 再構築（エンジン再生成）につながる。
+ *
+ * アニメーション中は App が毎フレーム再レンダリングされるため、
+ * props が変わらない限り再描画しないよう memo でラップしている。
  */
-export function AsciiInput({ value, onChange }: AsciiInputProps) {
+export const AsciiInput = memo(function AsciiInput({
+  value,
+  onChange,
+}: AsciiInputProps) {
   return (
     <div className="input">
       <div className="input__toolbar">
@@ -43,4 +50,4 @@ export function AsciiInput({ value, onChange }: AsciiInputProps) {
       />
     </div>
   );
-}
+});

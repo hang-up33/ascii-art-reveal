@@ -53,8 +53,6 @@ export function useAsciiAnimation(
   const listenersRef = useRef<Set<FrameListener>>(new Set());
   const currentFrameRef = useRef("");
 
-  durationRef.current = settings.durationMs;
-
   const emit = useCallback((frame: string) => {
     currentFrameRef.current = frame;
     listenersRef.current.forEach((listener) => listener(frame));
@@ -96,13 +94,17 @@ export function useAsciiAnimation(
   );
 
   const play = useCallback(() => {
-    if (!engineRef.current) return;
+    const engine = engineRef.current;
+    if (!engine) return;
     stopRaf();
     baseElapsedRef.current = 0;
     spanStartRef.current = performance.now();
+    setProgress(0);
     updateStatus("playing");
+    // 再生開始時点でノイズ（進捗 0）を即座に表示し、完成形の一瞬の露出を防ぐ。
+    emit(engine.render(0));
     rafRef.current = requestAnimationFrame(tick);
-  }, [stopRaf, tick, updateStatus]);
+  }, [emit, stopRaf, tick, updateStatus]);
 
   const pause = useCallback(() => {
     if (statusRef.current !== "playing") return;
@@ -136,8 +138,17 @@ export function useAsciiAnimation(
     };
   }, []);
 
-  // ASCII 本文・エフェクト・ノイズが変わったらエンジンを作り直し、
-  // 開始状態へリセットする。所要時間(duration)の変更では作り直さない。
+  // 所要時間(duration)の変更はコミット後の effect で ref へ反映する。
+  // レンダー中に ref を書き換えないことで、破棄され得るレンダーの
+  // 副作用が漏れないようにする。tick は rAF 内でのみ ref を読むため、
+  // 実行時の挙動は変わらない。
+  useEffect(() => {
+    durationRef.current = settings.durationMs;
+  }, [settings.durationMs]);
+
+  // ASCII 本文・エフェクト・ノイズが変わったらエンジンを作り直す。
+  // 作り直し直後は完成形を静止表示（finished）し、ユーザーが選択・編集した
+  // アートをそのまま確認できるようにする。`再生` でノイズから再収束させる。
   useEffect(() => {
     const grid = parseAscii(ascii);
     const effect = getEffect(settings.effect);
@@ -147,10 +158,10 @@ export function useAsciiAnimation(
       settings.noiseCharacters,
     );
     stopRaf();
-    baseElapsedRef.current = 0;
-    setProgress(0);
-    updateStatus("idle");
-    emit(engineRef.current.render(0));
+    baseElapsedRef.current = durationRef.current;
+    setProgress(1);
+    updateStatus("finished");
+    emit(engineRef.current.render(1));
   }, [
     ascii,
     settings.effect,

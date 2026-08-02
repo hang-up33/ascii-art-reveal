@@ -4,6 +4,7 @@ import type { AsciiGrid } from "../types/ascii";
 /** ノイズ文字が空の場合に使う既定のノイズ文字セット（末尾に空白を含む）。 */
 export const DEFAULT_NOISE_CHARACTERS = "@%#*+=-:. ";
 
+/** 数値を 0〜1 の範囲へ丸める。 */
 function clamp01(value: number): number {
   if (value < 0) return 0;
   if (value > 1) return 1;
@@ -39,10 +40,12 @@ export class AsciiRevealEngine {
     this.thresholds = effect.computeThresholds({ grid, random });
   }
 
+  /** グリッドの行数。 */
   get rows(): number {
     return this.grid.rows;
   }
 
+  /** グリッドの列数。 */
   get cols(): number {
     return this.grid.cols;
   }
@@ -68,6 +71,7 @@ export class AsciiRevealEngine {
     return lines.join("\n");
   }
 
+  /** ノイズ文字セットから 1 文字をランダムに選んで返す。 */
   private randomNoiseChar(): string {
     const index = Math.floor(this.random() * this.noise.length);
     return this.noise[index] ?? " ";

@@ -6,6 +6,7 @@
   --muted: #8a8a92;
   --accent: #4ade80;
   --accent-dim: #1f6f3f;
+
   color-scheme: dark;
 }
 
@@ -127,7 +128,7 @@ body {
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   padding: 0.6rem;
-  font-family: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 13px;
   line-height: 1.35;
   white-space: pre;
@@ -144,8 +145,11 @@ body {
 .viewer {
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  /* safe centering: 内容がビューワーより大きい場合は中央寄せをやめて
+     start 揃えにフォールバックし、はみ出した先頭列・上端が
+     overflow スクロールで参照できなくなるのを防ぐ。 */
+  align-items: safe center;
+  justify-content: safe center;
   background: #000;
   border-radius: 8px;
   padding: 0.75rem;
@@ -156,7 +160,7 @@ body {
 .viewer__pre {
   margin: 0;
   color: var(--accent);
-  font-family: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   white-space: pre;
   text-align: left;
   letter-spacing: 0;

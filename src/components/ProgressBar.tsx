@@ -3,6 +3,9 @@ interface ProgressBarProps {
   progress: number;
 }
 
+/**
+ * アニメーションの進捗率をバーとパーセント表示で示すコンポーネント。
+ */
 export function ProgressBar({ progress }: ProgressBarProps) {
   const percent = Math.round(progress * 100);
   return (

@@ -28,11 +28,18 @@ describe("parseAscii", () => {
     expect(grid.cells[0]).toEqual(["x"]);
   });
 
-  it("空文字列でも 1x1 のグリッドを返す", () => {
+  it("空文字列は空グリッド（rows/cols=0）を返す", () => {
     const grid = parseAscii("");
-    expect(grid.rows).toBe(1);
-    expect(grid.cols).toBe(1);
-    expect(grid.cells).toEqual([[" "]]);
+    expect(grid.rows).toBe(0);
+    expect(grid.cols).toBe(0);
+    expect(grid.cells).toEqual([]);
+  });
+
+  it("空行のみの入力も空グリッドを返す", () => {
+    const grid = parseAscii("\n\n\n");
+    expect(grid.rows).toBe(0);
+    expect(grid.cols).toBe(0);
+    expect(grid.cells).toEqual([]);
   });
 
   it("途中の空行は保持する", () => {

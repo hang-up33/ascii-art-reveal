@@ -14,16 +14,25 @@ describe("randomReveal", () => {
     thresholds.forEach((row) => expect(row).toHaveLength(2));
   });
 
-  it("閾値はすべて [0, 1) の範囲に収まる", () => {
+  it("閾値はすべて (0, 1) の範囲に収まる", () => {
     const grid = parseAscii("xxxx\nyyyy");
     const thresholds = randomReveal.computeThresholds({
       grid,
       random: Math.random,
     });
     thresholds.flat().forEach((v) => {
-      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeGreaterThan(0);
       expect(v).toBeLessThan(1);
     });
+  });
+
+  it("random() が 0 でも正の閾値になる（初期フレームで完成形が露出しない）", () => {
+    const grid = parseAscii("ab");
+    const thresholds = randomReveal.computeThresholds({
+      grid,
+      random: () => 0,
+    });
+    thresholds.flat().forEach((v) => expect(v).toBeGreaterThan(0));
   });
 
   it("注入した乱数生成器を使う（決定的）", () => {

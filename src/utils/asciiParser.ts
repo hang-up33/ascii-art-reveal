@@ -7,6 +7,8 @@ import { normalizeAscii } from "./normalizeAscii";
  * - 各行はグリッド全体の最大幅まで半角スペースで右詰めされる
  * - 末尾の空行は取り除く（先頭・途中の空行は保持する）
  * - サロゲートペアや結合文字を避けるため `Array.from` でコードポイント単位に分割する
+ * - 内容が無い（空文字列や空行のみ）場合は空グリッド（rows/cols=0）を返す。
+ *   これにより入力クリア時にノイズ文字が残らず、ビューワーが空になる。
  */
 export function parseAscii(input: string): AsciiGrid {
   const normalized = normalizeAscii(input);
@@ -18,10 +20,12 @@ export function parseAscii(input: string): AsciiGrid {
   }
 
   const rowChars = lines.map((line) => Array.from(line));
-  const cols = Math.max(
-    1,
-    rowChars.reduce((max, chars) => Math.max(max, chars.length), 0),
-  );
+  const cols = rowChars.reduce((max, chars) => Math.max(max, chars.length), 0);
+
+  // 全行が空（幅 0）なら描画すべき内容が無いため空グリッドを返す。
+  if (cols === 0) {
+    return { rows: 0, cols: 0, cells: [] };
+  }
 
   const cells = rowChars.map((chars) => {
     const padded = chars.slice();

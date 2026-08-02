@@ -15,6 +15,11 @@ const DEFAULT_SETTINGS: AnimationSettings = {
   effect: "random",
 };
 
+/**
+ * アプリのルートコンポーネント。
+ * 入力・ビューワー・コントロール・進捗をまとめ、アニメーションフックを介して
+ * 状態を配線する。マウント時に一度だけ自動再生する。
+ */
 export default function App() {
   const [ascii, setAscii] = useState(defaultSample.art);
   // Phase 1 では設定は既定値固定。Phase 2 で UI から変更できるようにする。

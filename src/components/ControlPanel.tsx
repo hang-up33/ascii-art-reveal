@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { AnimationStatus } from "../types/ascii";
 
 interface ControlPanelProps {
@@ -11,8 +12,11 @@ interface ControlPanelProps {
 /**
  * Phase 1 の再生コントロール。
  * 再生 / 一時停止 / 再開 / リセット を状態に応じて有効・無効化する。
+ *
+ * コールバックは安定参照のため、status が変わったときだけ再描画すれば
+ * よい。進捗更新による毎フレーム再レンダリングを避けるため memo でラップする。
  */
-export function ControlPanel({
+export const ControlPanel = memo(function ControlPanel({
   status,
   onPlay,
   onPause,
@@ -63,4 +67,4 @@ export function ControlPanel({
       </button>
     </div>
   );
-}
+});
