@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { asciiSamples } from "../samples/sampleAscii";
+import { CopyButton } from "./CopyButton";
 
 interface AsciiInputProps {
   value: string;
@@ -32,6 +33,7 @@ export const AsciiInput = memo(function AsciiInput({
             {sample.label}
           </button>
         ))}
+        <CopyButton className="input__chip input__chip--copy" text={value} />
         <button
           type="button"
           className="input__chip input__chip--clear"

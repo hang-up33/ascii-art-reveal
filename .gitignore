@@ -9,6 +9,15 @@ dist-ssr
 *.local
 *.tsbuildinfo
 
+# env files (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# cloudflare worker
+worker/.wrangler
+worker/node_modules
+
 # logs
 logs
 *.log

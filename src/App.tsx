@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AsciiInput } from "./components/AsciiInput";
 import { AsciiViewer } from "./components/AsciiViewer";
 import { ControlPanel } from "./components/ControlPanel";
+import { GeminiPrompt } from "./components/GeminiPrompt";
 import { ProgressBar } from "./components/ProgressBar";
 import { useAsciiAnimation } from "./hooks/useAsciiAnimation";
 import { defaultSample } from "./samples/sampleAscii";
@@ -33,6 +34,22 @@ export default function App() {
     play();
   }, [play]);
 
+  // AI 生成直後は収束アニメーションを自動再生する。
+  // エンジンは ascii 変更時の effect で作り直されるため、その後に play する
+  // 必要がある。フラグ方式でエンジン再構築後の再生を保証する。
+  const pendingPlayRef = useRef(false);
+  useEffect(() => {
+    if (pendingPlayRef.current) {
+      pendingPlayRef.current = false;
+      play();
+    }
+  }, [ascii, play]);
+
+  const handleGenerated = useCallback((generated: string) => {
+    pendingPlayRef.current = true;
+    setAscii(generated);
+  }, []);
+
   return (
     <div className="app">
       <header className="app__header">
@@ -44,6 +61,8 @@ export default function App() {
 
       <main className="app__main">
         <section className="app__panel app__panel--input">
+          <GeminiPrompt onGenerated={handleGenerated} />
+          <div className="app__panel-divider" />
           <AsciiInput value={ascii} onChange={setAscii} />
         </section>
         <section className="app__panel app__panel--viewer">

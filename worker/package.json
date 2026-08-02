@@ -1,0 +1,16 @@
+{
+  "name": "ascii-art-reveal-api",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ASCII Art Reveal の Gemini API 中継 Worker",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241106.0",
+    "typescript": "^5.6.3",
+    "wrangler": "^3.90.0"
+  }
+}
