@@ -226,8 +226,12 @@ export default {
       return new Response(null, { status: 204, headers: cors });
     }
 
-    // 許可オリジン以外は Gemini を呼ぶ前に拒否し、API クォータの不正消費を防ぐ。
-    // （CORS ヘッダはブラウザ側の制御にすぎず、サーバー側での拒否が必要。）
+    // Origin による許可判定は「ブラウザからの他サイト経由の悪用」を防ぐための
+    // ベストエフォートの CORS ポリシーであり、認証ではない点に注意。
+    // Origin ヘッダは非ブラウザ（curl 等）からは偽装可能なため、これだけで
+    // クォータ悪用を完全に防ぐことはできない。設計書のスコープ（CORS 制限＋
+    // レート制限）に沿った一次防御であり、公開・大量利用時は Cloudflare 側の
+    // レート制限/WAF や Turnstile 等の追加を推奨する（README 参照）。
     if (!isOriginAllowed(env, origin)) {
       return errorResponse(
         "FORBIDDEN_ORIGIN",

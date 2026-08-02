@@ -116,6 +116,8 @@ npx wrangler deploy
 - `ALLOWED_ORIGIN` の既定はローカル開発用（`http://localhost:5173`）です。デプロイ前に自分の GitHub Pages のオリジンへ変更してください（`*` はクォータ悪用を招くため非推奨）。
 - Worker は入力長・生成サイズの検証、コードフェンス除去、簡易レート制限、CORS 制限、許可オリジン以外のサーバー側拒否を行います。
 
+> **クォータ保護について**: `ALLOWED_ORIGIN` によるオリジン判定は、ブラウザからの他サイト経由の悪用を防ぐ _ベストエフォートの CORS ポリシー_ であり、認証ではありません。Origin ヘッダは非ブラウザ（curl 等）からは偽装できるため、これだけでクォータ悪用を完全には防げません。個人・少量利用なら CORS 制限＋レート制限で実用上十分ですが、広く公開して大量アクセスが想定される場合は、Cloudflare 側の[レート制限](https://developers.cloudflare.com/waf/rate-limiting-rules/)/WAF や [Turnstile](https://developers.cloudflare.com/turnstile/) 等の追加を検討してください。
+
 ### 2. フロントエンドに接続先を設定する
 
 `.env`（`.env.example` をコピー）に、デプロイした Worker の URL を設定します。
