@@ -1,0 +1,241 @@
+:root {
+  --bg: #000000;
+  --panel-bg: #0d0d0f;
+  --panel-border: #26262b;
+  --fg: #e8e8e8;
+  --muted: #8a8a92;
+  --accent: #4ade80;
+  --accent-dim: #1f6f3f;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 100vh;
+}
+
+.app__header {
+  text-align: center;
+}
+
+.app__title {
+  margin: 0;
+  font-size: 1.75rem;
+  letter-spacing: 0.04em;
+}
+
+.app__subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.app__main {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(0, 1.4fr);
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.app__panel {
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  padding: 0.75rem;
+  min-height: 0;
+  display: flex;
+}
+
+.app__panel--input,
+.app__panel--viewer {
+  flex-direction: column;
+}
+
+/* ------- 入力エリア ------- */
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.input__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.input__toolbar-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.input__chip {
+  background: #17171b;
+  color: var(--fg);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.input__chip:hover {
+  border-color: var(--accent-dim);
+}
+
+.input__chip--clear {
+  color: var(--muted);
+}
+
+.input__textarea {
+  flex: 1;
+  min-height: 220px;
+  resize: vertical;
+  background: #050506;
+  color: var(--fg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-family: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: pre;
+  overflow: auto;
+  tab-size: 4;
+}
+
+.input__textarea:focus {
+  outline: none;
+  border-color: var(--accent-dim);
+}
+
+/* ------- ビューワー ------- */
+.viewer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  border-radius: 8px;
+  padding: 0.75rem;
+  overflow: auto;
+  min-height: 260px;
+}
+
+.viewer__pre {
+  margin: 0;
+  color: var(--accent);
+  font-family: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+  white-space: pre;
+  text-align: left;
+  letter-spacing: 0;
+}
+
+/* ------- コントロール ------- */
+.app__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.controls__button {
+  background: #17171b;
+  color: var(--fg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.controls__button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.controls__button--primary {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: #eafff1;
+}
+
+.controls__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ------- 進捗バー ------- */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.progress__track {
+  flex: 1;
+  height: 6px;
+  background: #17171b;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.08s linear;
+}
+
+.progress__label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 3ch;
+  text-align: right;
+}
+
+/* ------- レスポンシブ（スマートフォン） ------- */
+@media (max-width: 720px) {
+  .app__main {
+    grid-template-columns: 1fr;
+  }
+}
