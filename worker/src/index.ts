@@ -33,11 +33,41 @@ const DEFAULT_MAX_WIDTH = 60;
 const DEFAULT_MAX_HEIGHT = 30;
 const WIDTH_LIMIT = 100;
 const HEIGHT_LIMIT = 50;
+// リクエストボディの上限（バイト）。プロンプト500文字＋数値2項目に十分な余裕。
+const MAX_BODY_BYTES = 4096;
 
 // 簡易レート制限（同一オリジン内の isolate 単位・ベストエフォート）。
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 20;
 const rateLimitStore = new Map<string, number[]>();
+
+/**
+ * リクエストボディをバイト上限つきで読み取る。
+ * 上限を超えた時点でストリームを打ち切り、巨大なボディをバッファ・
+ * パースする前にメモリ・CPU の消費を防ぐ。上限超過時は null を返す。
+ */
+async function readBodyText(
+  request: Request,
+  limit: number,
+): Promise<string | null> {
+  const reader = request.body?.getReader();
+  if (!reader) return "";
+  const decoder = new TextDecoder();
+  let total = 0;
+  let text = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) {
+      await reader.cancel();
+      return null;
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  text += decoder.decode();
+  return text;
+}
 
 /** 数値らしき値を指定範囲の整数へ丸める。不正値は fallback。 */
 function clampInt(value: unknown, fallback: number, min: number, max: number) {
@@ -271,9 +301,29 @@ export default {
       );
     }
 
+    // ボディをバイト上限つきで読み取り、巨大なペイロードを弾く（パース前に検証）。
+    const contentLength = Number(request.headers.get("Content-Length"));
+    if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+      return errorResponse(
+        "PAYLOAD_TOO_LARGE",
+        "リクエストが大きすぎます。",
+        413,
+        cors,
+      );
+    }
+    const rawBody = await readBodyText(request, MAX_BODY_BYTES);
+    if (rawBody === null) {
+      return errorResponse(
+        "PAYLOAD_TOO_LARGE",
+        "リクエストが大きすぎます。",
+        413,
+        cors,
+      );
+    }
+
     let parsed: unknown;
     try {
-      parsed = await request.json();
+      parsed = JSON.parse(rawBody);
     } catch {
       return errorResponse(
         "INVALID_JSON",
