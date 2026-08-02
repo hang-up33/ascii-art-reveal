@@ -33,3 +33,18 @@ export interface AsciiGrid {
   /** cells[row][col] の順でアクセスする。各要素は 1 文字。 */
   cells: string[][];
 }
+
+/** 自然言語→ASCIIアート生成 API のリクエスト。 */
+export interface AsciiGenerationRequest {
+  /** 生成したいものを表す自然言語プロンプト。 */
+  prompt: string;
+  /** 生成結果の最大横幅（文字数）。 */
+  maxWidth: number;
+  /** 生成結果の最大高さ（行数）。 */
+  maxHeight: number;
+}
+
+/** 自然言語→ASCIIアート生成 API の成功レスポンス。 */
+export interface AsciiGenerationResponse {
+  ascii: string;
+}

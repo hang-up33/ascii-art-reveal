@@ -6,6 +6,9 @@
   --muted: #8a8a92;
   --accent: #4ade80;
   --accent-dim: #1f6f3f;
+  --accent-fg: #eafff1;
+  --input-bg: #050506;
+  --error: #f87171;
 
   color-scheme: dark;
 }
@@ -79,6 +82,85 @@ body {
   flex-direction: column;
 }
 
+.app__panel--input {
+  gap: 0.75rem;
+}
+
+.app__panel-divider {
+  height: 1px;
+  background: var(--panel-border);
+  margin: 0.1rem 0;
+}
+
+/* ------- AI 生成プロンプト ------- */
+.gen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.gen__label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.gen__row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.gen__input {
+  flex: 1;
+  min-width: 0;
+  background: var(--input-bg);
+  color: var(--fg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.gen__input:focus {
+  outline: none;
+  border-color: var(--accent-dim);
+}
+
+.gen__input:disabled {
+  opacity: 0.6;
+}
+
+.gen__button {
+  white-space: nowrap;
+  background: var(--accent-dim);
+  color: var(--accent-fg);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.gen__button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.gen__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gen__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.gen__error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--error);
+}
+
 /* ------- 入力エリア ------- */
 .input {
   display: flex;
@@ -111,7 +193,18 @@ body {
   cursor: pointer;
 }
 
-.input__chip:hover {
+.input__chip:hover:not(:disabled) {
+  border-color: var(--accent-dim);
+}
+
+.input__chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input__chip--copy {
+  margin-left: auto;
+  color: var(--accent);
   border-color: var(--accent-dim);
 }
 
@@ -123,7 +216,7 @@ body {
   flex: 1;
   min-height: 220px;
   resize: vertical;
-  background: #050506;
+  background: var(--input-bg);
   color: var(--fg);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
@@ -200,7 +293,7 @@ body {
 .controls__button--primary {
   background: var(--accent-dim);
   border-color: var(--accent-dim);
-  color: #eafff1;
+  color: var(--accent-fg);
 }
 
 .controls__button:disabled {
