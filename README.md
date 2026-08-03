@@ -143,8 +143,20 @@ cd worker && npx wrangler dev        # http://localhost:8787
 npm run dev
 ```
 
-## GitHub Pages 対応について
+## GitHub Pages への公開（自動デプロイ）
 
-`vite.config.ts` の `base` をリポジトリ名（`/ascii-art-reveal/`）に合わせています。
-リポジトリ名を変更する場合は同ファイルの `REPOSITORY_NAME` を書き換えてください。
-GitHub Actions による自動デプロイは Phase 3 で追加します。
+`main` への push で GitHub Actions が自動でビルドし、GitHub Pages へ公開します（`.github/workflows/deploy-pages.yml`）。
+
+公開 URL: `https://<ユーザー名>.github.io/ascii-art-reveal/`
+
+### 初回のみ必要な設定
+
+リポジトリの **Settings → Pages → Build and deployment → Source** を **「GitHub Actions」** に設定してください（ワークフローが自動有効化を試みますが、権限により手動設定が必要な場合があります）。
+
+以降は `main` に push するたびに自動デプロイされます。Actions タブから手動実行（`workflow_dispatch`）も可能です。
+
+### 仕組み・注意点
+
+- ワークフローは `npm ci` → `npm run build` で `dist` を生成し、`actions/upload-pages-artifact` → `actions/deploy-pages` で公開します。
+- `vite.config.ts` の `base` をリポジトリ名（`/ascii-art-reveal/`）に合わせています。リポジトリ名を変更する場合は同ファイルの `REPOSITORY_NAME` を書き換えてください（公開パスがずれると空白ページになります）。
+- 公開されるのはフロントエンドのみです。AI 生成を公開サイトで有効にするには、Cloudflare Worker をデプロイしたうえで、リポジトリの **Settings → Secrets and variables → Actions → Variables** に `VITE_API_URL`（Worker の URL）を追加してください。ワークフローがビルド時に読み込みます。Worker の URL は公開情報なので Secret ではなく **Variable** で構いません。未設定でも手入力などの機能はそのまま動作します。
