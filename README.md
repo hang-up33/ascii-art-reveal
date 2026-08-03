@@ -147,13 +147,13 @@ npm run dev
 
 `main` への push で GitHub Actions が自動でビルドし、GitHub Pages へ公開します（`.github/workflows/deploy-pages.yml`）。
 
-公開 URL: `https://<ユーザー名>.github.io/ascii-art-reveal/`
+公開 URL: https://hang-up33.github.io/ascii-art-reveal/
 
-### 初回のみ必要な設定
+### 初回のみ必要な設定（必須）
 
-リポジトリの **Settings → Pages → Build and deployment → Source** を **「GitHub Actions」** に設定してください（ワークフローが自動有効化を試みますが、権限により手動設定が必要な場合があります）。
+デプロイ前に、リポジトリの **Settings → Pages → Build and deployment → Source** を **「GitHub Actions」** に設定してください。この設定を行うまでデプロイジョブは失敗します（ワークフロー側では Pages の自動有効化は行いません）。
 
-以降は `main` に push するたびに自動デプロイされます。Actions タブから手動実行（`workflow_dispatch`）も可能です。
+設定後は `main` に push するたびに自動デプロイされます。Actions タブから手動実行（`workflow_dispatch`）も可能です。
 
 ### 仕組み・注意点
 
