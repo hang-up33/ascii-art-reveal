@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+on:
+  # main への push で自動デプロイ
+  push:
+    branches: [main]
+  # 手動実行も可能にする
+  workflow_dispatch:
+
+# 既定は最小権限（読み取りのみ）。Pages/OIDC の書き込み権限は deploy ジョブにのみ付与する。
+permissions:
+  contents: read
+
+# 同時実行は 1 本に制限（進行中の実行はキャンセルしない＝公開途中の中断を避ける）
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # ビルドで third-party スクリプトを実行するため、認証 Git 情報を残さない
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # AI 生成を公開サイトで有効にする場合、リポジトリ変数 VITE_API_URL に
+          # デプロイ済み Worker の URL を設定する（Settings → Secrets and variables →
+          # Actions → Variables）。未設定なら空となり AI 生成は自動的に無効化される。
+          # Worker の URL は公開情報のため Secret ではなく Variable でよい。
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Pages デプロイに必要な最小権限をこのジョブにのみ付与する
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
